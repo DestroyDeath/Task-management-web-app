@@ -1,41 +1,63 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 function App() {
-  // Yeh state humare projects ko list mein store karegi
   const [projects, setProjects] = useState([]);
-  
-  // Yeh states input fields ke data ko handle karengi
   const [projectName, setProjectName] = useState('');
   const [budget, setBudget] = useState('');
 
-  // Jab user 'Add Project' button dabayega, tab yeh function chalega
-  const handleAddProject = (e) => {
-    e.preventDefault(); // Page ko refresh hone se rokne ke liye
-    if (!projectName || !budget) return; // Agar field khali hai toh kuch mat karo
+  // Tumhare Java Spring Boot server ka address
+  const API_URL = "http://localhost:8080/api/projects";
 
-    const newProject = {
-      id: Date.now(), // Har project ke liye ek unique ID
-      name: projectName,
-      budget: budget
-    };
+  // 1. Page load hote hi Java Backend se saare projects mangwana
+  useEffect(() => {
+    fetchProjects();
+  }, []);
 
-    // Puraane projects ke sath naya project list mein jod do
-    setProjects([...projects, newProject]);
-    
-    // Input fields ko wapas khali kar do
-    setProjectName('');
-    setBudget('');
+  const fetchProjects = () => {
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => setProjects(data))
+      .catch(err => console.error("Error fetching projects:", err));
   };
+
+  // 2. Naya project Java Backend par bhejna
+  const handleAddProject = (e) => {
+    e.preventDefault();
+    if (!projectName || !budget) return;
+
+    const newProject = { name: projectName, budget: Number(budget) };
+
+    fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProject)
+    })
+    .then(() => {
+      fetchProjects(); // List update karne ke liye wapas fetch karo
+      setProjectName('');
+      setBudget('');
+    });
+  };
+
+  // 3. Java Backend se project delete karna
+  const handleDelete = (id) => {
+    fetch(`${API_URL}/${id}`, {
+      method: 'DELETE'
+    })
+    .then(() => fetchProjects());
+  };
+
+  // Total amount calculate karna
+  const totalBudget = projects.reduce((sum, proj) => sum + proj.budget, 0);
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial', maxWidth: '600px', margin: 'auto' }}>
-      <h2>👨‍💻 Freelance Project Tracker</h2>
+      <h2>👨‍💻 My Upwork Project Tracker (React + Java)</h2>
 
-      {/* Form Jisme Client aur Project ki details aayengi */}
       <form onSubmit={handleAddProject} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <input
           type="text"
-          placeholder="Project Name (e.g., E-commerce UI)"
+          placeholder="Project Name"
           value={projectName}
           onChange={(e) => setProjectName(e.target.value)}
           style={{ padding: '8px', flex: 1 }}
@@ -47,22 +69,33 @@ function App() {
           onChange={(e) => setBudget(e.target.value)}
           style={{ padding: '8px', width: '120px' }}
         />
-        <button type="submit" style={{ padding: '8px 15px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer' }}>
+        <button type="submit" style={{ padding: '8px 15px', background: '#007bff', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
           Add Project
         </button>
       </form>
 
-      {/* Projects ki List yahan dikhegi */}
+      <div style={{ background: '#e9ecef', padding: '15px', borderRadius: '5px', marginBottom: '20px' }}>
+        <h3 style={{ margin: 0, color: '#333' }}>Total Expected Earnings: <span style={{ color: '#28a745' }}>${totalBudget}</span></h3>
+      </div>
+
       <div>
         <h3>Your Current Projects:</h3>
         {projects.length === 0 ? <p style={{ color: 'gray' }}>Abhi tak koi project add nahi kiya hai.</p> : null}
         
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {projects.map((proj) => (
-            <li key={proj.id} style={{ border: '1px solid #ddd', margin: '10px 0', padding: '15px', borderRadius: '5px', background: '#f9f9f9' }}>
-              <strong>{proj.name}</strong> 
-              <br />
-              <span style={{ color: 'green' }}>Budget: ${proj.budget}</span>
+            <li key={proj.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #ddd', margin: '10px 0', padding: '15px', borderRadius: '5px', background: '#f9f9f9' }}>
+              <div>
+                <strong>{proj.name}</strong> 
+                <br />
+                <span style={{ color: 'green' }}>Budget: ${proj.budget}</span>
+              </div>
+              <button 
+                onClick={() => handleDelete(proj.id)} 
+                style={{ padding: '5px 10px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+              >
+                Delete
+              </button>
             </li>
           ))}
         </ul>
