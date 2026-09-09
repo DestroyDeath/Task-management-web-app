@@ -5,8 +5,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/projects")
-@CrossOrigin(origins = "http://localhost:5173") // React ko allow karne ke liye
-public class ProjectController {
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://friendly-palmier-1cc4b0.netlify.app"
+})public class ProjectController {
 
     private ProjectManager manager = new ProjectManager();
 
