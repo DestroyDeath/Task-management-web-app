@@ -6,7 +6,7 @@ function App() {
   const [budget, setBudget] = useState('');
 
   // Tumhare Java Spring Boot server ka address
-  const API_URL = "http://localhost:8080/api/projects";
+  const API_URL =  "https://project-tracker-backend-w81g.onrender.com/api/projects"
 
   // 1. Page load hote hi Java Backend se saare projects mangwana
   useEffect(() => {
